@@ -12,7 +12,13 @@ import PlantList from "./components/PlantList.vue";
 @Component({
   components: { PlantList }
 })
-export default class App extends Vue {}
+export default class App extends Vue {
+  created() {
+    fetch("/api")
+      .then(response => response.json())
+      .then(console.log);
+  }
+}
 </script>
 
 <style>
