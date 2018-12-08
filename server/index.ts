@@ -1,4 +1,11 @@
 import app from "./app";
+import routes from "./routes";
+import mongoose from "mongoose";
+
+mongoose.connect(process.env.MONGO_URI || "mongodb://localhost:27017/waterboy");
+mongoose.Promise = global.Promise;
+
+routes(app);
 
 app.listen(app.get("port"), () => {
   console.log(
