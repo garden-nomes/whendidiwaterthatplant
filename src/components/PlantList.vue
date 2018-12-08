@@ -46,18 +46,14 @@
 
 <script lang="ts">
 import moment from "moment";
+import api from "../api";
 import { Component, Vue } from "vue-property-decorator";
-
-interface Watering {
-  id: number;
-  time: string;
-}
 
 interface Plant {
   id: number;
   name: string;
   added: string;
-  waterings: Watering[];
+  waterings: string[];
 }
 
 @Component({
@@ -90,12 +86,7 @@ export default class PlantList extends Vue {
   }
 
   water(plant: Plant) {
-    plant.waterings.push({
-      id: this.id,
-      time: moment().format()
-    });
-
-    this.id++;
+    plant.waterings.push(moment().format());
   }
 
   hasWaterings(plant: Plant) {
@@ -104,7 +95,7 @@ export default class PlantList extends Vue {
 
   latestWatering(plant: Plant) {
     return moment
-      .unix(Math.max(...plant.waterings.map(w => moment(w.time).unix())))
+      .unix(Math.max(...plant.waterings.map(w => moment(w).unix())))
       .format();
   }
 
@@ -128,15 +119,42 @@ export default class PlantList extends Vue {
     ];
   }
 
-  mounted() {
-    const plants = localStorage.getItem("plant-list");
-    if (plants) {
-      this.plants = JSON.parse(plants);
+  created() {
+    this.load().then(() => {
+      this.$watch("plants", this.save, { deep: true });
+    });
+  }
+
+  load() {
+    const id = this.getId();
+
+    if (id) {
+      return api.boards.get(id).then(({ data }) => {
+        this.plants = data.plants;
+      });
+    } else {
+      return Promise.resolve();
     }
   }
 
-  updated() {
-    localStorage.setItem("plant-list", JSON.stringify(this.plants));
+  save() {
+    const id = this.getId();
+
+    if (id) {
+      api.boards.put(id, { plants: this.plants });
+    } else {
+      api.boards
+        .post({ plants: this.plants })
+        .then(({ data }) => this.setId(data._id));
+    }
+  }
+
+  getId() {
+    return localStorage.getItem("boardId");
+  }
+
+  setId(id: string) {
+    localStorage.setItem("boardId", id);
   }
 }
 </script>
