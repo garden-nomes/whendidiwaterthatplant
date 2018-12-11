@@ -14,7 +14,7 @@ export default {
     });
   },
   get: (req: Request, res: Response) => {
-    Board.find({ key: req.params.key }, (err, board) => {
+    Board.findOne({ key: req.params.key }, (err, board) => {
       if (err) res.send(err);
       res.json(board);
     });

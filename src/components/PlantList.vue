@@ -2,32 +2,7 @@
   <div>
     <div class="row mt-4">
       <div v-for="plant in plants" :key="plant.id" class="col-lg-6 mb-4">
-        <div class="card h-100">
-          <div class="card-body d-flex flex-column">
-            <h5 class="card-title mb-auto">{{ plant.name }}</h5>
-            <p
-              :class="textClass(plant)"
-              v-if="hasWaterings(plant)"
-            >Last watered {{ latestWatering(plant) | fromNow }}.</p>
-            <div class="my-2">
-              <button
-                type="button"
-                class="btn btn-outline-primary btn-lg w-100"
-                @click="water(plant)"
-              >Water</button>
-            </div>
-
-            <div class="row align-items-baseline">
-              <div class="col">
-                <small class="text-muted">added {{ plant.added | date }}</small>
-              </div>
-
-              <div class="col col-auto text-right">
-                <button class="btn btn-sm btn-link text-danger" @click="remove(plant)">delete</button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Plant v-bind="plant" @water="water(plant)" @remove="remove(plant)"/>
       </div>
     </div>
 
@@ -45,11 +20,12 @@
 </template>
 
 <script lang="ts">
+import Plant from "./Plant.vue";
 import moment from "moment";
 import api from "../api";
 import { Component, Vue } from "vue-property-decorator";
 
-interface Plant {
+interface PlantData {
   id: number;
   name: string;
   added: string;
@@ -57,13 +33,10 @@ interface Plant {
 }
 
 @Component({
-  filters: {
-    fromNow: (value: string) => moment(value).fromNow(),
-    date: (value: string) => moment(value).format("LL")
-  }
+  components: { Plant }
 })
 export default class PlantList extends Vue {
-  plants: Plant[] = [];
+  plants: PlantData[] = [];
   name = "";
   id = 0;
 
@@ -79,44 +52,14 @@ export default class PlantList extends Vue {
     this.id++;
   }
 
-  remove(plant: Plant) {
+  remove(plant: PlantData) {
     if (confirm(`Are you sure you want to delete "${plant.name}"?`)) {
       this.plants.splice(this.plants.indexOf(plant), 1);
     }
   }
 
-  water(plant: Plant) {
+  water(plant: PlantData) {
     plant.waterings.push(moment().format());
-  }
-
-  hasWaterings(plant: Plant) {
-    return plant.waterings.length > 0;
-  }
-
-  latestWatering(plant: Plant) {
-    return moment
-      .unix(Math.max(...plant.waterings.map(w => moment(w).unix())))
-      .format();
-  }
-
-  dangerLevel(plant: Plant) {
-    const levels = [[1, "day"], [5, "days"], [10, "days"], [2, "weeks"]].map(
-      ([...args]) => moment.duration(...args)
-    );
-
-    const watering = this.latestWatering(plant);
-
-    const level = levels.find((duration, index) =>
-      moment().isBefore(moment(watering).add(duration))
-    );
-
-    return level === undefined ? levels.length : levels.indexOf(level);
-  }
-
-  textClass(plant: Plant) {
-    return ["text-success", "", "text-warning", "text-danger", "text-danger"][
-      this.dangerLevel(plant)
-    ];
   }
 
   created() {
