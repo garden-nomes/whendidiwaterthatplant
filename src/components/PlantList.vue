@@ -126,7 +126,7 @@ export default class PlantList extends Vue {
   }
 
   load() {
-    const id = this.getId();
+    const id = this.getKey();
 
     if (id) {
       return api.boards.get(id).then(({ data }) => {
@@ -138,22 +138,22 @@ export default class PlantList extends Vue {
   }
 
   save() {
-    const id = this.getId();
+    const id = this.getKey();
 
     if (id) {
       api.boards.put(id, { plants: this.plants });
     } else {
       api.boards
         .post({ plants: this.plants })
-        .then(({ data }) => this.setId(data._id));
+        .then(({ data }) => this.setKey(data.key));
     }
   }
 
-  getId() {
+  getKey() {
     return localStorage.getItem("boardId");
   }
 
-  setId(id: string) {
+  setKey(id: string) {
     localStorage.setItem("boardId", id);
   }
 }

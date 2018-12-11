@@ -13,16 +13,15 @@ export default {
       res.json(board);
     });
   },
-  getById: (req: Request, res: Response) => {
-    Board.findById(req.params.id, (err, board) => {
+  get: (req: Request, res: Response) => {
+    Board.find({ key: req.params.key }, (err, board) => {
       if (err) res.send(err);
       res.json(board);
     });
   },
   updateBoard: (req: Request, res: Response) => {
-    console.log([req.params, req.body]);
     Board.findOneAndUpdate(
-      { _id: req.params.id },
+      { key: req.params.key },
       req.body,
       { new: true },
       (err, board) => {

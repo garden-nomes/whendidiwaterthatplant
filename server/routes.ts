@@ -5,7 +5,7 @@ export default (routes: Router) => {
   routes.route("/api/boards").post(boards.post);
 
   routes
-    .route("/api/boards/:id")
-    .get(boards.getById)
+    .route("/api/boards/:key")
+    .get(boards.get)
     .put(boards.updateBoard);
 };
