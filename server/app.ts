@@ -15,8 +15,4 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(morgan("combined"));
 
-app.get("/api", (req, res) => {
-  res.send({ message: "hello" });
-});
-
 export default app;
