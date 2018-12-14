@@ -16,6 +16,15 @@
         </div>
       </div>
     </form>
+
+    <div class="text-muted text-center small mt-4">Share these plants:
+      <div class="input-group input-group-sm">
+        <input :value="shareUrl" type="text" class="form-control" disabled>
+        <div class="input-group-append">
+          <button role="button" class="btn btn-outline-secondary" @click="copyUrlToClipbord">copy</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -23,6 +32,7 @@
 import Plant from "./Plant.vue";
 import moment from "moment";
 import api from "../api";
+import { copyToClipboard } from "../lib/clipboard";
 import { Component, Vue } from "vue-property-decorator";
 
 interface PlantData {
@@ -31,6 +41,8 @@ interface PlantData {
   added: string;
   waterings: string[];
 }
+
+const uuidRegex = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89AB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}/;
 
 @Component({
   components: { Plant }
@@ -62,29 +74,41 @@ export default class PlantList extends Vue {
     plant.waterings.push(moment().format());
   }
 
+  get shareUrl() {
+    return window.location.href + this.getKey();
+  }
+
+  copyUrlToClipbord() {
+    copyToClipboard(this.shareUrl);
+  }
+
   created() {
-    this.load().then(() => {
+    this.loadSaved().then(() => {
       this.$watch("plants", this.save, { deep: true });
     });
   }
 
-  load() {
-    const id = this.getKey();
+  loadSaved() {
+    const key = this.getKey();
 
-    if (id) {
-      return api.boards.get(id).then(({ data }) => {
-        this.plants = data.plants;
-      });
+    if (key) {
+      return this.load(key);
     } else {
       return Promise.resolve();
     }
   }
 
-  save() {
-    const id = this.getKey();
+  load(key: string) {
+    return api.boards.get(key).then(({ data }) => {
+      this.plants = data.plants;
+    });
+  }
 
-    if (id) {
-      api.boards.put(id, { plants: this.plants });
+  save() {
+    const key = this.getKey();
+
+    if (key) {
+      api.boards.put(key, { plants: this.plants });
     } else {
       api.boards
         .post({ plants: this.plants })
@@ -93,11 +117,20 @@ export default class PlantList extends Vue {
   }
 
   getKey() {
-    return localStorage.getItem("boardId");
+    const match = uuidRegex.exec(window.location.pathname);
+
+    if (match) {
+      const key = match[0];
+      this.setKey(key);
+      window.history.replaceState({}, document.title, "/");
+      return key;
+    } else {
+      return localStorage.getItem("key");
+    }
   }
 
-  setKey(id: string) {
-    localStorage.setItem("boardId", id);
+  setKey(key: string) {
+    localStorage.setItem("key", key);
   }
 }
 </script>
