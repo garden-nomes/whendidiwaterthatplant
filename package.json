@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "postinstall": "npm run build",
     "start": "node server/dist/index.js",
     "dev": "concurrently -k \"npm:watch-*\"",
     "build": "npm run build-vue && npm run build-ts",
